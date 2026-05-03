@@ -1,6 +1,13 @@
 {
   "name": "@monyone/myers-diff-linear-space",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "author": "monyone <monyone.teihen@gmail.com>",
+  "description": "Myers Algorithm (Linear Space) written in TypeScript",
+  "keywords": [
+    "diff",
+    "myers",
+    "myers-diff"
+  ],
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.mts",
