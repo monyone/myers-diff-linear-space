@@ -67,7 +67,7 @@ const diff = <T,>(from: T[], to: T[], from_begin: number, from_end: number, to_b
         const is_opposite_k_valid = opposite_k >= -(depth - (1 - direction)) && opposite_k <= (depth - (1 - direction));
         // (is_forward && total_length % 2 !== 0) || (!is_forward && total_length % 2 === 0)
         const should_check_overlap = (total_length % 2) === (1 - direction);
-        const is_snakes_overlap  = current[mod(k, compute_length)] + opposite[mod(opposite_k, compute_length)] >= from_length;
+        const is_snakes_overlap = current[mod(k, compute_length)] + opposite[mod(opposite_k, compute_length)] >= from_length;
         if (should_check_overlap && is_opposite_k_valid && is_snakes_overlap) {
           const distance = 2 * depth + (direction - 1);
           const { x, y, u, v } = (() => {
