@@ -1,0 +1,11 @@
+{
+  "name": "@monyone/myers-diff-linear-space",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "tsdown": "^0.21.10",
+    "typescript": "^5.9.3"
+  }
+}
