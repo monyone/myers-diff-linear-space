@@ -37,6 +37,7 @@ const diff = <T,>(from: T[], to: T[], from_begin: number, from_end: number, to_b
   const backward = Array.from({ length: compute_length }, () => 0);
   for (let depth = 0; depth <= max_depth; depth++) {
     for (let direction = 0; direction < 2; direction++) {
+      // forward => direction === 0, backward => direction === 1
       const is_forward = direction === 0;
       const current = is_forward ? forward : backward;
       const opposite = is_forward ? backward : forward;
@@ -98,8 +99,16 @@ const diff = <T,>(from: T[], to: T[], from_begin: number, from_end: number, to_b
     }
   }
 
-  // unreachable
-  return [];
+  /*
+    The SES length is at most M+N (all deletes + all inserts),
+    so the middle snake is always found within depth <= ceil((M+N)/2).
+    The loop above covers this range, meaning this point is never reached.
+
+    SES の長さは最大でも M+N (全削除+全挿入) なので
+    middle snake は depth <= ceil((M+N)/2) の範囲で必ず見つかる。
+    上のループはこの範囲を網羅しているため、ここには到達しない。
+  */
+  throw new Error('unreachable: middle snake not found');
 }
 
 export default <T,>(a: T[], b: T[], eq: (a: T, b: T) => boolean = (a, b) => a === b): Operation[] => {
