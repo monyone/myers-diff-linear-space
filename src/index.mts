@@ -7,7 +7,7 @@ export type Operation = {
 };
 
 const mod = (n: number, m: number): number => {
-  return (n + m) % m;
+  return ((n % m) + m) % m;
 }
 
 const diff = <T,>(from: T[], to: T[], from_begin: number, from_end: number, to_begin: number, to_end: number, eq: (a: T, b: T) => boolean): Operation[] => {
