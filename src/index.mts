@@ -10,7 +10,7 @@ const mod = (n: number, m: number): number => {
   return ((n % m) + m) % m;
 }
 
-const diff = <T,>(from: T[], to: T[], from_begin: number, from_end: number, to_begin: number, to_end: number, eq: (a: T, b: T) => boolean): Operation[] => {
+const diff = <T,>(from: ArrayLike<T>, to: ArrayLike<T>, from_begin: number, from_end: number, to_begin: number, to_end: number, eq: (a: T, b: T) => boolean): Operation[] => {
   const from_length = from_end - from_begin;
   const to_length = to_end - to_begin;
   const total_length = from_length + to_length;
@@ -111,6 +111,6 @@ const diff = <T,>(from: T[], to: T[], from_begin: number, from_end: number, to_b
   throw new Error('unreachable: middle snake not found');
 }
 
-export default <T,>(a: T[], b: T[], eq: (a: T, b: T) => boolean = (a, b) => a === b): Operation[] => {
+export default <T,>(a: ArrayLike<T>, b: ArrayLike<T>, eq: (a: T, b: T) => boolean = (a, b) => a === b): Operation[] => {
   return diff(a, b, 0, a.length, 0, b.length, eq);
 }
