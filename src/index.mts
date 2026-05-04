@@ -10,7 +10,7 @@ const mod = (n: number, m: number): number => {
   return ((n % m) + m) % m;
 }
 
-export default <T,>(from: ArrayLike<T>, to: ArrayLike<T>, eq: (a: T, b: T) => boolean = (a, b) => a === b): Operation[] => {
+export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, eq: (a: T, b: T) => boolean = (a, b) => a === b): Operation[] => {
   const stack: [number, number, number, number][] = [[0, from.length, 0, to.length]];
   const result: Operation[] = [];
 
