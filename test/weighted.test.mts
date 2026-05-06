@@ -198,3 +198,86 @@ describe('Weighted Diff (Hirschberg linear space)', () => {
     }
   });
 });
+
+describe('Weighted Diff with bandWidth', () => {
+  it('wide band matches unbanded result', () => {
+    const from = [1, 3, 5, 7, 9];
+    const to = [2, 4, 6, 8, 10];
+    const unbanded = weightedDiff(from, to, numDist);
+    const banded = weightedDiff(from, to, numDist, { bandWidth: 10 });
+    expect(opsCost(from, to, banded, numDist)).toBe(opsCost(from, to, unbanded, numDist));
+  });
+
+  it('identical sequences with narrow band', () => {
+    const from = [1, 2, 3, 4, 5];
+    const to = [1, 2, 3, 4, 5];
+    const ops = weightedDiff(from, to, numDist, { bandWidth: 0 });
+    expect(ops).toEqual([]);
+  });
+
+  it('narrow band restricts match candidates (from_length=1 base case)', () => {
+    // from=[5], to=[1,2,3,4,5,6,7]
+    // band=0 なら from[0] の期待位置は d=0 なので to[0]=1 しか match 候補にならない
+    // cost(5,1)=4 > delete(1)+insert(1)=2 なので delete+insert all
+    const ops = weightedDiff([5], [1, 2, 3, 4, 5, 6, 7], numDist, { bandWidth: 0 });
+    expect(ops.some(o => o.type === 'delete')).toBe(true);
+    expect(ops.filter(o => o.type === 'insert').length).toBe(7);
+  });
+
+  it('wider band finds better match (from_length=1 base case)', () => {
+    // band が十分広ければ from[0]=5 と to[4]=5 が match でき、delete なしになる
+    const ops = weightedDiff([5], [1, 2, 3, 4, 5, 6, 7], numDist, { bandWidth: 10 });
+    expect(ops.some(o => o.type === 'delete')).toBe(false);
+  });
+
+  it('narrow band restricts match candidates (to_length=1 base case)', () => {
+    // from=[1,2,3,4,5,6,7], to=[5]
+    // band=0 なら to[0] の期待位置は d=0 なので from[0]=1 しか match 候補にならない
+    // cost(1,5)=4 > insert(1)+delete(1)=2 なので insert+delete all
+    const ops = weightedDiff([1, 2, 3, 4, 5, 6, 7], [5], numDist, { bandWidth: 0 });
+    expect(ops.some(o => o.type === 'insert')).toBe(true);
+    expect(ops.filter(o => o.type === 'delete').length).toBe(7);
+  });
+
+  it('wider band finds better match (to_length=1 base case)', () => {
+    const ops = weightedDiff([1, 2, 3, 4, 5, 6, 7], [5], numDist, { bandWidth: 10 });
+    expect(ops.some(o => o.type === 'insert')).toBe(false);
+  });
+
+  it('band constrains DP (equal length, band=1)', () => {
+    const from = [0, 0, 0, 0, 10];
+    const to =   [10, 0, 0, 0, 0];
+    // band=0: 対角のみ → cost(0,10)=10 + cost(10,0)=10 の match vs delete+insert
+    // band が広ければ from[4]=10 と to[0]=10 を match できるが band=0 では無理
+    const narrow = weightedDiff(from, to, numDist, { bandWidth: 0 });
+    const wide = weightedDiff(from, to, numDist, { bandWidth: 5 });
+    expect(opsCost(from, to, narrow, numDist)).toBeGreaterThanOrEqual(
+      opsCost(from, to, wide, numDist)
+    );
+  });
+
+  it('band does not break monotonicity of operations', () => {
+    const from = Array.from({ length: 20 }, (_, i) => Math.sin(i * 0.3));
+    const to = Array.from({ length: 20 }, (_, i) => Math.sin(i * 0.3 + 0.5));
+    const ops = weightedDiff(from, to, numDist, { bandWidth: 3 });
+
+    const deletes = ops.filter(o => o.type === 'delete').map(o => o.from);
+    for (let k = 1; k < deletes.length; k++) {
+      expect(deletes[k]).toBeGreaterThan(deletes[k - 1]);
+    }
+    const inserts = ops.filter(o => o.type === 'insert').map(o => o.to);
+    for (let k = 1; k < inserts.length; k++) {
+      expect(inserts[k]).toBeGreaterThan(inserts[k - 1]);
+    }
+  });
+
+  it('band matches unbanded for similar-length sequences with sufficient band', () => {
+    const from = Array.from({ length: 15 }, (_, i) => i);
+    const to = Array.from({ length: 18 }, (_, i) => i + Math.sin(i));
+    const unbanded = weightedDiff(from, to, numDist);
+    const banded = weightedDiff(from, to, numDist, { bandWidth: 5 });
+    expect(opsCost(from, to, banded, numDist)).toBeCloseTo(
+      opsCost(from, to, unbanded, numDist), 8
+    );
+  });
+});

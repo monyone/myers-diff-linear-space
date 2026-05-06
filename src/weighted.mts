@@ -11,6 +11,7 @@ export type WeightedDiffOption = {
     insert?: number;
     delete?: number;
   };
+  bandWidth?: number;
 };
 
 export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, cost: (a: T, b: T) => number, option?: WeightedDiffOption) => {
@@ -19,6 +20,7 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
 
   const insert_cost = option?.cost?.insert ?? 1;
   const delete_cost = option?.cost?.delete ?? 1;
+  const bandWidth = option?.bandWidth ?? Number.POSITIVE_INFINITY;
   const max_length = to.length + 1;
 
   const fwd_costs = Array.from({ length: max_length }, () => Number.POSITIVE_INFINITY);
@@ -27,6 +29,16 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
     Array.from({ length: max_length }, () => Number.POSITIVE_INFINITY),
     Array.from({ length: max_length }, () => Number.POSITIVE_INFINITY),
   ];
+
+  const fwd_band_range = (gi: number, to_begin: number, to_length: number): [number, number] => {
+    const d = Math.floor((gi * to.length) / from.length);
+    return [Math.max(1, d - bandWidth - to_begin + 1), Math.min(to_length, d + bandWidth - to_begin + 1)];
+  };
+
+  const rev_band_range = (gi: number, to_end: number, to_length: number): [number, number] => {
+    const d = Math.floor((gi * to.length) / from.length);
+    return [Math.max(1, to_end - (d + bandWidth)), Math.min(to_length, to_end - (d - bandWidth))];
+  };
 
   LOOP:
   while (stack.length > 0) {
@@ -51,8 +63,11 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
 
     // 少なくともどちらかが length: 1 のケース
     if (from_length === 1) {
+      const d = Math.floor((from_begin * to.length) / from.length);
+      const jMin = Math.max(0, d - bandWidth - to_begin);
+      const jMax = Math.min(to_length - 1, d + bandWidth - to_begin);
       let best_j = -1, best_cost = 1 * delete_cost + to_length * insert_cost;
-      for (let j = 0; j < to_length; j++) {
+      for (let j = jMin; j <= jMax; j++) {
         const current_cost = cost(from[from_begin], to[to_begin + j]) + (to_length - 1) * insert_cost;
         if (current_cost < best_cost) {
           best_cost = current_cost;
@@ -75,8 +90,11 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
       continue LOOP;
     }
     if (to_length === 1) {
+      const d = Math.floor((to_begin * from.length) / to.length);
+      const iMin = Math.max(0, d - bandWidth - from_begin);
+      const iMax = Math.min(from_length - 1, d + bandWidth - from_begin);
       let best_i = -1, best_cost = 1 * insert_cost + from_length * delete_cost;
-      for (let i = 0; i < from_length; i++) {
+      for (let i = iMin; i <= iMax; i++) {
         const current_cost = cost(from[from_begin + i], to[to_begin]) + (from_length - 1) * delete_cost;
         if (current_cost < best_cost) {
           best_cost = current_cost;
@@ -115,7 +133,9 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
       for (let i = 1; i <= fwd_len; i++) {
         rows[curr].fill(Infinity, 0, to_length + 1);
         rows[curr][0] = i * delete_cost; // delete のみ
-        for (let j = 1; j <= to_length; j++) {
+        const gi = from_begin + i - 1;
+        const [jMin, jMax] = fwd_band_range(gi, to_begin, to_length);
+        for (let j = jMin; j <= jMax; j++) {
           const match = rows[prev][j - 1] + cost(from[from_begin + i - 1], to[to_begin + j - 1]);
           const del = rows[prev][j - 0] + delete_cost;
           const ins = rows[curr][j - 1] + insert_cost;
@@ -139,7 +159,9 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
       for (let i = 1; i <= rev_len; i++) {
         rows[curr].fill(Infinity, 0, to_length + 1);
         rows[curr][0] = i * delete_cost;
-        for (let j = 1; j <= to_length; j++) {
+        const gi = from_end - i;
+        const [jMin, jMax] = rev_band_range(gi, to_end, to_length);
+        for (let j = jMin; j <= jMax; j++) {
           const match = rows[prev][j - 1] + cost(from[from_end - i], to[to_end - j]);
           const del = rows[prev][j] + delete_cost;
           const ins = rows[curr][j - 1] + insert_cost;
