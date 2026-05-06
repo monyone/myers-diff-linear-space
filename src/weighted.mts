@@ -125,13 +125,13 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
     // forward path
     {
       let prev = 0, curr = 1;
-      rows[prev].fill(Infinity, 0, to_length + 1);
+      rows[prev].fill(Number.POSITIVE_INFINITY, 0, to_length + 1);
       rows[prev][0] = 0;
       for (let j = 1; j <= to_length; j++){
         rows[prev][j] = j * insert_cost;
       }
       for (let i = 1; i <= fwd_len; i++) {
-        rows[curr].fill(Infinity, 0, to_length + 1);
+        rows[curr].fill(Number.POSITIVE_INFINITY, 0, to_length + 1);
         rows[curr][0] = i * delete_cost; // delete のみ
         const gi = from_begin + i - 1;
         const [jMin, jMax] = fwd_band_range(gi, to_begin, to_length);
@@ -151,13 +151,13 @@ export default <T,>(from: Readonly<ArrayLike<T>>, to: Readonly<ArrayLike<T>>, co
     // backward path
     {
       let prev = 0, curr = 1;
-      rows[prev].fill(Infinity, 0, to_length + 1);
+      rows[prev].fill(Number.POSITIVE_INFINITY, 0, to_length + 1);
       rows[prev][0] = 0;
       for (let j = 1; j <= to_length; j++) {
         rows[prev][j] = j * insert_cost;
       }
       for (let i = 1; i <= rev_len; i++) {
-        rows[curr].fill(Infinity, 0, to_length + 1);
+        rows[curr].fill(Number.POSITIVE_INFINITY, 0, to_length + 1);
         rows[curr][0] = i * delete_cost;
         const gi = from_end - i;
         const [jMin, jMax] = rev_band_range(gi, to_end, to_length);
